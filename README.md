@@ -7,7 +7,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-Glassmorphism%20Design-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![APIs](https://img.shields.io/badge/Public%20APIs-Open--Meteo-10B981?style=for-the-badge&logo=fastapi&logoColor=white)
 
-![PulseSphere Weather Intelligence Preview](./image.png)
+![PulseSphere Weather Intelligence Preview](./Weather.png)
 
 ---
 
