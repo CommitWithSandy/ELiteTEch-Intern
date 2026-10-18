@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseSphere | Real-Time Weather & Atmosphere Intelligence</title>
+  <meta name="description" content="An elite responsive web application dynamically fetching and displaying real-time data from public weather and environmental APIs. Built for Elite Tech Internship Task 1: API Integration.">
+  <meta name="keywords" content="API Integration, Weather API, Open-Meteo, Air Quality, Elite Tech, JavaScript, CSS3, Responsive Design">
+  <meta name="author" content="Elite Tech Intern">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+  <!-- Dynamic Weather Ambient Background Mesh -->
+  <div class="ambient-glow-wrapper" id="ambientBg" aria-hidden="true">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <!-- Offline Status Toast Banner -->
+  <div class="network-banner" id="networkBanner" role="status" aria-live="polite">
+    <span class="banner-icon">⚠️</span>
+    <span class="banner-text">You are currently offline. Showing cached data.</span>
+  </div>
+
+  <!-- Application Header -->
+  <header class="app-header" id="mainHeader">
+    <div class="header-inner container">
+      <!-- Brand Logo & Internship Tag -->
+      <div class="brand-group">
+        <a href="#" class="brand-logo" id="brandLogo">
+          <div class="logo-icon-box">
+            <svg class="pulse-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="#00f0ff"></path>
+              <path d="M4 12h3l2-4 4 8 2-4h5" stroke="url(#logoGrad)" stroke-linecap="round" stroke-linejoin="round"></path>
+              <defs>
+                <linearGradient id="logoGrad" x1="4" y1="12" x2="20" y2="12" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#00f0ff" />
+                  <stop offset="1" stop-color="#a855f7" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">PulseSphere<span class="brand-dot">.</span></span>
+            <span class="brand-badge">Elite Tech Intern &bull; Task 1</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Global Controls (Unit Toggle & Refresh) -->
+      <div class="header-controls">
+        <!-- Metric / Imperial Toggle -->
+        <div class="unit-toggle" id="unitToggle" title="Toggle Units (°C / °F)" role="group" aria-label="Temperature Units">
+          <button class="unit-btn active" id="btnCelsius" data-unit="celsius" aria-pressed="true">°C</button>
+          <button class="unit-btn" id="btnFahrenheit" data-unit="fahrenheit" aria-pressed="false">°F</button>
+        </div>
+
+        <!-- Global Sync Button -->
+        <button class="icon-action-btn" id="btnRefreshAll" title="Refresh Live Weather Data" aria-label="Refresh Data">
+          <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
+        </button>
+
+        <!-- API Connection Status -->
+        <div class="api-status-pill" id="apiStatusPill" title="Open-Meteo Public API Status">
+          <span class="status-pulse-dot"></span>
+          <span class="status-text">Connected</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="main-content container" id="mainContent">
+
+    <!-- ============================================== -->
+    <!-- SECTION 1: WEATHER & ENVIRONMENTAL INTELLIGENCE -->
+    <!-- ============================================== -->
+    <section class="view-section active" id="weatherSection" aria-labelledby="weatherSectionHeading">
+      <h1 class="sr-only" id="weatherSectionHeading">Real-Time Global Weather and Atmosphere Intelligence</h1>
+
+      <!-- Search & Geolocation Bar -->
+      <div class="search-experience-card glass-panel">
+        <div class="search-form-row">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input 
+              type="text" 
+              id="citySearchInput" 
+              class="city-search-input" 
+              placeholder="Search city, state or country (e.g. London, Tokyo, New York, Mumbai)..." 
+              autocomplete="off"
+              aria-autocomplete="list"
+              aria-controls="citySuggestionsList"
+              aria-label="Search city for weather forecast"
+            >
+            <button class="clear-input-btn hidden" id="btnClearSearch" aria-label="Clear Search Input">✕</button>
+
+            <!-- Autocomplete Suggestions Dropdown -->
+            <ul class="suggestions-dropdown hidden" id="citySuggestionsList" role="listbox" aria-label="City Search Suggestions">
+              <!-- Dynamically populated via Geocoding API -->
+            </ul>
+          </div>
+
+          <!-- Geolocation Action Button -->
+          <button class="btn-location" id="btnGeolocate" title="Use current GPS location" aria-label="Locate My Position">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
+              <circle cx="12" cy="12" r="8"></circle>
+            </svg>
+            <span class="btn-text">Locate Me</span>
+          </button>
+        </div>
+
+        <!-- Quick Access Chips & Bookmarked Favorites -->
+        <div class="quick-chips-row">
+          <span class="chips-label">Popular:</span>
+          <div class="chips-container" id="popularChips">
+            <button class="chip-btn" data-city="London" data-lat="51.5074" data-lon="-0.1278" data-country="United Kingdom">🇬🇧 London</button>
+            <button class="chip-btn" data-city="Tokyo" data-lat="35.6762" data-lon="139.6503" data-country="Japan">🇯🇵 Tokyo</button>
+            <button class="chip-btn" data-city="New York" data-lat="40.7128" data-lon="-74.0060" data-country="United States">🇺🇸 New York</button>
+            <button class="chip-btn" data-city="Paris" data-lat="48.8566" data-lon="2.3522" data-country="France">🇫🇷 Paris</button>
+            <button class="chip-btn" data-city="Dubai" data-lat="25.2048" data-lon="55.2708" data-country="United Arab Emirates">🇦🇪 Dubai</button>
+            <button class="chip-btn" data-city="Mumbai" data-lat="19.0760" data-lon="72.8777" data-country="India">🇮🇳 Mumbai</button>
+            <button class="chip-btn" data-city="Sydney" data-lat="-33.8688" data-lon="151.2093" data-country="Australia">🇦🇺 Sydney</button>
+          </div>
+          <div class="favorites-wrapper" id="favoritesWrapper">
+            <span class="chips-label fav-label">Saved:</span>
+            <div class="chips-container" id="favoriteCitiesChips">
+              <!-- Dynamically populated from LocalStorage -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather Loading Skeleton Overlay -->
+      <div class="loading-state hidden" id="weatherLoadingState" aria-live="polite">
+        <div class="spinner-orbital"></div>
+        <p class="loading-label">Connecting to Open-Meteo Public API...</p>
+      </div>
+
+      <!-- Main Weather Dashboard Grid -->
+      <div class="weather-dashboard-grid" id="weatherDashboardGrid">
+        
+        <!-- Left / Top Column: Current Condition Card -->
+        <div class="weather-hero-card glass-panel" id="weatherHeroCard">
+          <div class="hero-header">
+            <div class="location-meta">
+              <div class="location-badge-row">
+                <span class="live-dot-indicator"></span>
+                <span class="location-timezone-text" id="cityTimezone">Local Time: --:--</span>
+                <button class="favorite-toggle-btn" id="btnToggleFavorite" title="Bookmark this city" aria-label="Favorite this location">
+                  <svg class="star-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+              <h2 class="location-city-title" id="locationCity">London</h2>
+              <p class="location-country-sub" id="locationCountry">United Kingdom</p>
+            </div>
+            <div class="weather-condition-pill" id="weatherConditionPill">Partly Cloudy</div>
+          </div>
+
+          <div class="hero-body">
+            <div class="hero-temp-group">
+              <div class="current-weather-icon-box" id="currentWeatherIcon">
+                <!-- Injected Dynamic SVG Icon -->
+              </div>
+              <div class="temp-numbers">
+                <span class="hero-temperature" id="currentTemp">18</span>
+                <span class="hero-temp-unit" id="currentTempUnit">°C</span>
+              </div>
+            </div>
+            <div class="hero-meta-details">
+              <p class="weather-summary-text" id="weatherDescription">Partly cloudy with pleasant ambient breeze</p>
+              <div class="temp-range-pill">
+                <span class="range-item">Feels like <strong id="feelsLikeTemp">19°C</strong></span>
+                <span class="divider">&bull;</span>
+                <span class="range-item">H: <strong id="highTemp">22°C</strong></span>
+                <span class="divider">&bull;</span>
+                <span class="range-item">L: <strong id="lowTemp">14°C</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-footer-stats">
+            <div class="hero-stat-item">
+              <span class="stat-label">Precipitation</span>
+              <span class="stat-val" id="heroPrecipitation">0 mm</span>
+            </div>
+            <div class="hero-stat-item">
+              <span class="stat-label">Cloud Cover</span>
+              <span class="stat-val" id="heroCloudCover">35%</span>
+            </div>
+            <div class="hero-stat-item">
+              <span class="stat-label">Wind Gusts</span>
+              <span class="stat-val" id="heroWindGusts">18 km/h</span>
+            </div>
+            <div class="hero-stat-item">
+              <span class="stat-label">Updated</span>
+              <span class="stat-val" id="heroLastUpdated">Just now</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 Atmospheric Metric Cards -->
+        <div class="metrics-grid">
+          <!-- Metric 1: Wind & Compass -->
+          <div class="metric-card glass-panel">
+            <div class="metric-header">
+              <span class="metric-icon">💨</span>
+              <span class="metric-title">Wind & Gusts</span>
+            </div>
+            <div class="metric-body">
+              <div class="wind-visual-container">
+                <div class="compass-dial" id="compassDial">
+                  <div class="compass-pointer" id="compassPointer"></div>
+                  <span class="compass-n">N</span>
+                </div>
+                <div class="wind-text-block">
+                  <div class="metric-large-value"><span id="metricWindSpeed">12</span> <small id="metricWindUnit">km/h</small></div>
+                  <span class="metric-subtext" id="metricWindDirection">Direction: ENE (65°)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metric 2: Humidity & Dew Point -->
+          <div class="metric-card glass-panel">
+            <div class="metric-header">
+              <span class="metric-icon">💧</span>
+              <span class="metric-title">Humidity</span>
+            </div>
+            <div class="metric-body">
+              <div class="metric-large-value"><span id="metricHumidity">68</span>%</div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="humidityProgress" style="width: 68%;"></div>
+              </div>
+              <span class="metric-subtext" id="metricDewPoint">Comfortable &bull; Dew point: 11°C</span>
+            </div>
+          </div>
+
+          <!-- Metric 3: UV Index -->
+          <div class="metric-card glass-panel">
+            <div class="metric-header">
+              <span class="metric-icon">☀️</span>
+              <span class="metric-title">UV Index</span>
+            </div>
+            <div class="metric-body">
+              <div class="uv-gauge-row">
+                <div class="metric-large-value" id="metricUVIndex">4.2</div>
+                <span class="badge-status-pill uv-badge-moderate" id="uvBadge">Moderate</span>
+              </div>
+              <div class="uv-scale-bar">
+                <div class="uv-indicator-dot" id="uvIndicatorDot" style="left: 42%;"></div>
+              </div>
+              <span class="metric-subtext" id="metricUVAdvice">Sun protection advised near midday</span>
+            </div>
+          </div>
+
+          <!-- Metric 4: Air Quality Index (AQI) -->
+          <div class="metric-card glass-panel">
+            <div class="metric-header">
+              <span class="metric-icon">🍃</span>
+              <span class="metric-title">Air Quality (US AQI)</span>
+            </div>
+            <div class="metric-body">
+              <div class="uv-gauge-row">
+                <div class="metric-large-value" id="metricAQIValue">32</div>
+                <span class="badge-status-pill aqi-badge-good" id="aqiBadge">Good</span>
+              </div>
+              <div class="aqi-pollutants-summary" id="aqiSummaryStats">
+                <span>PM2.5: <strong id="aqiPM25">7.2 µg/m³</strong></span>
+                <span>PM10: <strong id="aqiPM10">14.1 µg/m³</strong></span>
+              </div>
+              <span class="metric-subtext" id="aqiAdvice">Air quality is ideal for outdoor activities</span>
+            </div>
+          </div>
+
+          <!-- Metric 5: Pressure -->
+          <div class="metric-card glass-panel">
+            <div class="metric-header">
+              <span class="metric-icon">⏲️</span>
+              <span class="metric-title">Atmospheric Pressure</span>
+            </div>
+            <div class="metric-body">
+              <div class="metric-large-value"><span id="metricPressure">1016</span> <small>hPa</small></div>
+              <div class="pressure-gauge-track">
+                <div class="pressure-pointer" id="pressurePointer" style="left: 55%;"></div>
+              </div>
+              <span class="metric-subtext" id="metricPressureTrend">Normal barometric pressure</span>
+            </div>
+          </div>
+
+          <!-- Metric 6: Sun Schedule -->
+          <div class="metric-card glass-panel">
+            <div class="metric-header">
+              <span class="metric-icon">🌅</span>
+              <span class="metric-title">Sunrise & Sunset</span>
+            </div>
+            <div class="metric-body">
+              <!-- Sun Arch SVG Visual -->
+              <div class="sun-arc-visual">
+                <svg viewBox="0 0 160 70" class="sun-arc-svg">
+                  <path d="M 15 60 A 65 65 0 0 1 145 60" fill="none" stroke="rgba(255,255,255,0.15)" stroke-dasharray="4,4" stroke-width="2"/>
+                  <path id="sunArcPassed" d="M 15 60 A 65 65 0 0 1 80 15" fill="none" stroke="#FBBF24" stroke-width="3"/>
+                  <circle id="sunArcDot" cx="80" cy="15" r="5" fill="#FBBF24" filter="drop-shadow(0 0 6px #FBBF24)"/>
+                  <line x1="10" y1="60" x2="150" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="sun-times-row">
+                <div class="sun-item">
+                  <span class="sun-label">Sunrise</span>
+                  <span class="sun-time" id="sunSunrise">06:42 AM</span>
+                </div>
+                <div class="sun-item text-right">
+                  <span class="sun-label">Sunset</span>
+                  <span class="sun-time" id="sunSunset">06:18 PM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 24-Hour Forecast Timeline & Dynamic Interactive Chart -->
+        <div class="hourly-forecast-card glass-panel">
+          <div class="section-card-header">
+            <div>
+              <h3 class="section-card-title">24-Hour Hourly Trajectory</h3>
+              <p class="section-card-subtitle">Temperature fluctuation & precipitation probability</p>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color-temp"></span> Temperature</span>
+              <span class="legend-item"><span class="legend-color-rain"></span> Rain %</span>
+            </div>
+          </div>
+
+          <!-- Interactive SVG Dynamic Temperature Curve -->
+          <div class="hourly-chart-wrapper" id="hourlyChartContainer">
+            <svg id="hourlySvgChart" class="hourly-svg-chart" preserveAspectRatio="none" viewBox="0 0 800 120">
+              <!-- Rendered via JS -->
+            </svg>
+          </div>
+
+          <!-- Hourly Carousel Cards -->
+          <div class="hourly-carousel-track" id="hourlyForecastTrack" tabindex="0" role="region" aria-label="Hourly weather forecast carousel">
+            <!-- Dynamically populated 24 hours -->
+          </div>
+        </div>
+
+        <!-- 7-Day Extended Forecast Card -->
+        <div class="daily-forecast-card glass-panel">
+          <div class="section-card-header">
+            <div>
+              <h3 class="section-card-title">7-Day Extended Outlook</h3>
+              <p class="section-card-subtitle">Reliable meteorology model forecast from Open-Meteo</p>
+            </div>
+          </div>
+          <div class="daily-forecast-list" id="dailyForecastList">
+            <!-- Dynamically populated 7 days -->
+          </div>
+        </div>
+
+
+      </div>
+    </section>
+
+
+  </main>
+
+  <!-- Application Footer & Internship Details -->
+  <footer class="app-footer">
+    <div class="footer-inner container">
+      <div class="footer-top-grid">
+        <div class="footer-brand-column">
+          <div class="footer-logo">
+            <span class="brand-name">PulseSphere<span class="brand-dot">.</span></span>
+          </div>
+          <p class="footer-desc">
+            A state-of-the-art public API integration platform delivering real-time meteorological forecasts, atmospheric air quality diagnostics, and 24-hour hourly trajectory models.
+          </p>
+        </div>
+
+        <div class="footer-apis-column">
+          <h4 class="footer-heading">Public APIs Integrated</h4>
+          <ul class="footer-api-list">
+            <li>
+              <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" class="api-link">
+                <strong>Open-Meteo Weather API</strong>
+                <span>High-resolution global forecasts & 24h hourly projections</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener noreferrer" class="api-link">
+                <strong>Open-Meteo Air Quality API</strong>
+                <span>Atmospheric PM2.5, PM10, CO, NO2 & US AQI gauges</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-features-column">
+          <h4 class="footer-heading">Core Engineering Highlights</h4>
+          <ul class="feature-bullets">
+            <li>✓ 100% Vanilla ES6+ & Modern CSS3 (No heavy runtime bloat)</li>
+            <li>✓ Responsive Glassmorphism Design System with Dynamic Light</li>
+            <li>✓ Asynchronous Fetch with Graceful Fallbacks & Offline Mode</li>
+            <li>✓ Interactive SVG Micro-charting & 24h Projections</li>
+            <li>✓ User LocalStorage Persistence for Bookmarks & Unit Preference</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <p class="copyright-text">
+          &copy; 2026 <strong>PulseSphere</strong> &bull; Crafted with precision for <strong>Elite Tech Intern</strong> Task 1 evaluation.
+        </p>
+        <div class="footer-bottom-actions">
+          <button class="footer-action-link" id="btnScrollToTop">Back to Top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
