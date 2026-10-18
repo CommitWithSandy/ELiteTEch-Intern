@@ -7,7 +7,21 @@
 ![CSS3](https://img.shields.io/badge/CSS3-Glassmorphism%20Design-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![APIs](https://img.shields.io/badge/Public%20APIs-Open--Meteo-10B981?style=for-the-badge&logo=fastapi&logoColor=white)
 
-![PulseSphere Weather Intelligence Preview](./Weather.png)
+![PulseSphere Weather Intelligence Preview](./MainPage.png)
+
+---
+
+## 📸 UI & Feature Showcase
+
+| **Main Dashboard & Overview** | **24-Hour Hourly Trajectory** |
+| :---: | :---: |
+| ![PulseSphere Main Dashboard](./MainPage.png) | ![24-Hour Hourly Forecast](./24hr.png) |
+| *Live weather metrics, dynamic atmospheric backdrop, feels like, daily high/low* | *Hourly temperature trajectory, condition indicators, precipitation probability* |
+
+| **7-Day Extended Outlook** | **Atmospheric Gauges & Environmental Intelligence** |
+| :---: | :---: |
+| ![7-Day Extended Forecast](./7dayextend.png) | ![Atmospheric Gauges & AQI](./Info.png) |
+| *Visual weekly min/max temperature distribution bars & weather conditions* | *Animated compass dial, humidity, UV index, US AQI (PM2.5/PM10), pressure & sun arc* |
 
 ---
 
@@ -62,6 +76,10 @@
 
 ```text
 EliteTech Projects/
+├── 24hr.png         # 24-Hour forecast & temperature curve preview
+├── 7dayextend.png   # 7-Day extended outlook preview
+├── Info.png         # Atmospheric gauges & AQI preview
+├── MainPage.png     # Full dashboard main page preview
 ├── index.html       # Semantic HTML5 document with accessibility & SEO tags
 ├── style.css        # Custom Glassmorphic design system, CSS variables & animations
 ├── app.js           # ES6+ modular controllers (WeatherService, UIController)
@@ -105,3 +123,4 @@ npx serve .
 
 **Developed for**: Elite Tech Internship Evaluation  
 **Status**: Completed & Verified ✅
+
